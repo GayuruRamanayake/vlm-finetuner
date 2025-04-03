@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5000';
+const API_URL2 = 'https://4pwidgomv5jcc5-4000.proxy.runpod.net';
 
 // Define TypeScript interfaces for API responses
 export interface Model {
@@ -58,7 +59,8 @@ interface SystemInfoResponse {
 }
 
 interface FineTuneResponse {
-  message: string;
+  task_id: string;
+  status: string;
 }
 
 interface ModelsResponse {
@@ -150,8 +152,8 @@ export const performVqa = async (
 // Fetch list of downloaded models
 export const fetchModels = async (): Promise<ModelsResponse> => {
   try {
-    const response = await axios.get(`${API_URL}/models`);
-    return response.data;
+    const response = await axios.get(`${API_URL2}/models`);
+    return response.data; 
   } catch (error) {
     return handleApiError(error);
   }
@@ -265,13 +267,22 @@ export const fetchSystemInfo = async (): Promise<SystemInfoResponse> => {
 };
 
 // Fine-tune a model
-export const finetuneModel = async (model: string, dataset: string): Promise<FineTuneResponse> => {
+export const finetuneModel = async (modelName: string, dataset: string): Promise<FineTuneResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/finetune`, { model, dataset });
+    const payload = {
+      model_name: modelName,
+      dataset_path: dataset,
+    }
+    const response = await axios.post(`${API_URL2}/start-finetuning`, payload);
     return response.data;
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error); 
   }
+};
+
+export const fetchTaskStatus = async (taskId: string) => {
+  const response = await axios.get(`https://4pwidgomv5jcc5-4000.proxy.runpod.net/status/${taskId}`);
+  return response.data; // Assumes response.data = { status, progress, loss, learning_rate, epoch, error }
 };
 
 // Upload image folder for captioning
